@@ -12,7 +12,13 @@ exports.createUser = async (req, res) => {
 
 exports.loginUser = async (req, res) => {
   try {
-    // login user
+    const { username, password } = req.body;
+
+    const user = await UserModel.findOne({ username });
+    if (!user || password != user.password) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+    res.status(200).json({ message: "Valid credentials" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
