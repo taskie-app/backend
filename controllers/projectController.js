@@ -19,9 +19,26 @@ exports.createProject = async (req, res) => {
     }
 };
 
-exports.getProjects = async (req, res) => { };
+exports.getProjects = async (req, res) => {
+    try {
+        const projects = await ProjectModel.find();
+        res.json({ data: { projects } });
+    } catch (error) {
+        console.error(error);
+        res.json({ error });
+    }
+};
 
-exports.getProjectDetails = async (req, res) => { };
+exports.getProjectDetails = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const project = await ProjectModel.findById(id);
+        res.json({ data: { project } });
+    } catch (error) {
+        console.error(error);
+        res.json({ error });
+    }
+};
 
 exports.updateProject = async (req, res) => { };
 
