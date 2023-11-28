@@ -59,6 +59,15 @@ exports.updateProject = async (req, res) => {
     }
 };
 
-exports.deleteProject = async (req, res) => { };
+exports.deleteProject = async (req, res) => {
+    const { id } = req.params;
+    try {
+        await ProjectModel.findByIdAndDelete(id);
+        res.json({ error: null });
+    } catch (error) {
+        console.error(error);
+        res.json({ error });
+    }
+};
 
 exports.inviteUserToProject = async (req, res) => { };
