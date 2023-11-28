@@ -40,7 +40,24 @@ exports.getProjectDetails = async (req, res) => {
     }
 };
 
-exports.updateProject = async (req, res) => { };
+exports.updateProject = async (req, res) => {
+    const { id } = req.params;
+    const { name, description, manager, members } = req.body;
+
+    try {
+        const updatedProject = await ProjectModel.findByIdAndUpdate(id, {
+            name,
+            description,
+            manager,
+            members,
+        });
+
+        res.json({ data: { project: updatedProject } });
+    } catch (error) {
+        console.error(error);
+        res.json({ error });
+    }
+};
 
 exports.deleteProject = async (req, res) => { };
 
