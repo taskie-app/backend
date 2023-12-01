@@ -15,6 +15,7 @@ const app = express();
 
 // Set up mongoose connection
 const mongoose = require("mongoose");
+const { authenticateToken } = require("./controllers/userController");
 mongoose.set("strictQuery", false);
 
 main().catch((err) => console.log(err));
@@ -35,8 +36,8 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
-app.use("/projects", projectsRouter);
-app.use("/tasks", tasksRouter);
+app.use("/projects", authenticateToken, projectsRouter);
+app.use("/tasks", authenticateToken, tasksRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
