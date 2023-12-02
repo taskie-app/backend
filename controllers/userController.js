@@ -23,7 +23,16 @@ exports.createUser = async (req, res) => {
 
     const { password: _, ...rest } = newUser;
 
-    const token = jwt.sign({ ...rest }, JWT_SECRET);
+    const token = jwt.sign(
+      {
+        user: {
+          _id: user._id,
+          username: user.username,
+          avatar_url: user.avatar_url,
+        },
+      },
+      JWT_SECRET
+    );
     res.cookie("jwt", token, { httpOnly: true });
     res.json({ error: null });
   } catch (error) {
@@ -36,7 +45,7 @@ exports.signIn = async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    const user = await UserModel.findOne({ username });
+    const user = await UserModel.findOne({ username }).exec();
     if (!user) {
       return res.json({ error: "User not existed" });
     }
@@ -44,9 +53,16 @@ exports.signIn = async (req, res) => {
       return res.json({ error: "Invalid password" });
     }
 
-    const { password: _, ...rest } = user;
-
-    const token = jwt.sign({ ...rest }, JWT_SECRET);
+    const token = jwt.sign(
+      {
+        user: {
+          _id: user._id,
+          username: user.username,
+          avatar_url: user.avatar_url,
+        },
+      },
+      JWT_SECRET
+    );
     res.cookie("jwt", token, { httpOnly: true });
     res.json({ error: null });
   } catch (error) {
@@ -68,9 +84,9 @@ exports.authenticateToken = (req, res, next) => {
   const token = req.cookies["jwt"];
   if (!token) return res.json({ error: "Unauthorized" });
 
-  jwt.verify(token, JWT_SECRET, (error, user) => {
+  jwt.verify(token, JWT_SECRET, (error, data) => {
     if (error) return res.json({ error });
-    req.user = user;
+    req.user = data.user;
     next();
   });
 };

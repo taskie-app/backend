@@ -2,6 +2,7 @@ const ProjectModel = require("../models/projectModel");
 
 exports.createProject = async (req, res) => {
   const { user } = req;
+  console.log(user);
   const { name, description } = req.body;
 
   const newProject = new ProjectModel({
