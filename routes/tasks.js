@@ -9,6 +9,6 @@ router.get("/:id", taskController.getTaksDetails);
 router.put("/:id", taskController.updateTask);
 router.delete("/:id", taskController.deleteTask);
 
-// others routes
+router.post("/:id/comments", taskController.commentOnTask);
 
 module.exports = router;
