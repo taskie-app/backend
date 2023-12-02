@@ -7,26 +7,25 @@ const JWT_SECRET = "jwt-secret";
 
 exports.createUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-    console.log({ username, email, password });
+    const { username, password } = req.body;
 
-    const user = await UserModel.findOne({ email });
+    const user = await UserModel.findOne({ username });
     if (user) {
-      return res.json({ user: null, error: new Error("User already existed") });
+      return res.json({ error: "Username has been used" });
     }
 
     const hashedPassword = await bcrypt.hash(password, ROUNDS);
-    console.log(hashedPassword);
     const newUser = new UserModel({
       username,
-      email,
       password: hashedPassword,
     });
     await newUser.save();
 
-    const token = jwt.sign({ userId: newUser._id }, JWT_SECRET);
+    const { password: _, ...rest } = newUser;
+
+    const token = jwt.sign({ ...rest }, JWT_SECRET);
     res.cookie("jwt", token, { httpOnly: true });
-    res.json({ token, error: null });
+    res.json({ error: null });
   } catch (error) {
     console.error(error);
     res.json({ error });
@@ -35,9 +34,9 @@ exports.createUser = async (req, res) => {
 
 exports.signIn = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
-    const user = await UserModel.findOne({ email });
+    const user = await UserModel.findOne({ username });
     if (!user) {
       return res.json({ error: "User not existed" });
     }
@@ -45,7 +44,9 @@ exports.signIn = async (req, res) => {
       return res.json({ error: "Invalid password" });
     }
 
-    const token = jwt.sign({ id: user._id }, JWT_SECRET);
+    const { password: _, ...rest } = user;
+
+    const token = jwt.sign({ ...rest }, JWT_SECRET);
     res.cookie("jwt", token, { httpOnly: true });
     res.json({ error: null });
   } catch (error) {
@@ -58,14 +59,14 @@ exports.signOut = async (req, res) => {
   try {
     res.clearCookie("jwt");
     res.json({ error: null });
-  } catch {
+  } catch (error) {
     res.json({ error });
   }
 };
 
 exports.authenticateToken = (req, res, next) => {
   const token = req.cookies["jwt"];
-  if (!token) return res.json({ error: new Error("Unauthorized") });
+  if (!token) return res.json({ error: "Unauthorized" });
 
   jwt.verify(token, JWT_SECRET, (error, user) => {
     if (error) return res.json({ error });
@@ -75,8 +76,18 @@ exports.authenticateToken = (req, res, next) => {
 };
 
 exports.getUsers = async (req, res) => {
-  const { email } = req.body;
-  UserModel.find({ email }, "-password")
-    .then((user) => res.json({ user, error: null }))
-    .catch((error) => res.json({ user: null, error }));
+  const { username } = req.query;
+  UserModel.find({ username }, "-password")
+    .then((users) => res.json({ users, error: null }))
+    .catch((error) => res.json({ users: null, error }));
+};
+
+exports.getAuthenticated = async (req, res) => {
+  const token = req.cookies["jwt"];
+  if (!token) return res.json({ authenticated: false });
+
+  jwt.verify(token, JWT_SECRET, (error, user) => {
+    if (error) return res.json({ authenticated: false });
+    res.json({ authenticated: true });
+  });
 };
