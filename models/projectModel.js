@@ -2,19 +2,15 @@ const mongoose = require("mongoose");
 
 const projectSchema = new mongoose.Schema({
   name: String,
+  description: String,
   manager: {
-    userId: mongoose.Schema.Types.ObjectId,
-    username: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
   },
   members: [
     {
-      userId: mongoose.Schema.Types.ObjectId,
-      username: String,
-      status: {
-        type: String,
-        enum: ["invited", "accepted"],
-        default: "invited",
-      },
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
   ],
 });
