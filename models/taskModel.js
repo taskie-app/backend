@@ -1,8 +1,15 @@
 const mongoose = require("mongoose");
 
 const taskSchema = new mongoose.Schema({
-  projectId: mongoose.Schema.Types.ObjectId,
-  name: String,
+  projectId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Project",
+    require: true,
+  },
+  name: {
+    type: String,
+    require: true,
+  },
   description: String,
   assignedTo: {
     type: mongoose.Schema.Types.ObjectId,
@@ -13,7 +20,7 @@ const taskSchema = new mongoose.Schema({
     enum: ["TODO", "IN_PROGRESS", "DONE"],
     default: "TODO",
   },
-  dueDate: Date,
+  dueDate: String,
   comments: [
     {
       author: {
