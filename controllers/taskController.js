@@ -28,7 +28,7 @@ exports.createTask = async (req, res) => {
 };
 
 exports.getTasks = async (req, res) => {
-  const { projectId } = req.params;
+  const { projectId } = req.query;
   if (!projectId) {
     return res.json({ error: "Project ID must be provided" });
   }
@@ -38,8 +38,8 @@ exports.getTasks = async (req, res) => {
       select: "-password",
     })
     .exec()
-    .then(() => res.json({ tasks, error: null }))
-    .catch((error) => res.json({ tasks: null, error }));
+    .then((tasks) => res.json({ tasks, error: null }))
+    .catch((error) => res.json({ tasks: null, error: error.message }));
 };
 
 exports.getTaskDetails = async (req, res) => {
