@@ -4,9 +4,9 @@ exports.createTask = async (req, res) => {
   const {
     projectId,
     name,
-    description,
+    description = "",
     assignedTo = null,
-    status = "TODO",
+    status,
     dueDate = null,
     comments = [],
   } = req.body;
@@ -28,25 +28,28 @@ exports.createTask = async (req, res) => {
 };
 
 exports.getTasks = async (req, res) => {
-  try {
-    const tasks = await TaskModel.find();
-    res.json({ tasks, error: null });
-  } catch (error) {
-    console.error(error);
-    res.json({ error });
+  const { projectId } = req.query;
+  if (!projectId) {
+    return res.json({ error: "Project ID must be provided" });
   }
-};
-
-exports.getTasksByProject = async (req, res) => {
-  const { projectId } = req.params;
   TaskModel.find({ projectId })
+    .populate({
+      path: "assignedTo",
+      select: "-password",
+    })
+    .exec()
     .then((tasks) => res.json({ tasks, error: null }))
-    .catch((error) => res.json({ tasks: null, error }));
+    .catch((error) => res.json({ tasks: null, error: error.message }));
 };
 
-exports.getTaksDetails = async (req, res) => {
+exports.getTaskDetails = async (req, res) => {
   const { id } = req.params;
   TaskModel.findById(id)
+    .populate({
+      path: "assignedTo",
+      select: "-password",
+    })
+    .exec()
     .then((task) => res.json({ task, error: null }))
     .catch((error) => res.json({ task: null, error }));
 };
@@ -59,7 +62,7 @@ exports.updateTask = async (req, res) => {
     projectId,
     name,
     description,
-    assignedTo,
+    assignedTo: assignedTo?._id,
     status,
     dueDate,
   })

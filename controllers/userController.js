@@ -26,9 +26,9 @@ exports.createUser = async (req, res) => {
     const token = jwt.sign(
       {
         user: {
-          _id: user._id,
-          username: user.username,
-          avatar_url: user.avatar_url,
+          _id: newUser._id,
+          username: newUser.username,
+          avatar_url: newUser.avatar_url,
         },
       },
       JWT_SECRET
@@ -45,7 +45,7 @@ exports.signIn = async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    const user = await UserModel.findOne({ username }).exec();
+    const user = await UserModel.findOne({ username });
     if (!user) {
       return res.json({ error: "User not existed" });
     }
@@ -106,4 +106,9 @@ exports.getAuthenticated = async (req, res) => {
     if (error) return res.json({ authenticated: false });
     res.json({ authenticated: true });
   });
+};
+
+exports.updateUser = async (req, res) => {
+  const { id } = req.params;
+  console.log(req.file);
 };
