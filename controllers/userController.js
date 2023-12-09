@@ -93,7 +93,8 @@ exports.authenticateToken = (req, res, next) => {
 
 exports.getUsers = async (req, res) => {
   const { username } = req.query;
-  UserModel.find({ username }, "-password")
+  if (!username || username == "") return res.json({ users: [], error: null });
+  UserModel.find({ username: { $regex: username, $options: "i" } }, "-password")
     .then((users) => res.json({ users, error: null }))
     .catch((error) => res.json({ users: null, error }));
 };

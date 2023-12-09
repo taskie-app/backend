@@ -28,18 +28,28 @@ exports.createTask = async (req, res) => {
 };
 
 exports.getTasks = async (req, res) => {
+  const { user } = req;
   const { projectId } = req.query;
-  if (!projectId) {
-    return res.json({ error: "Project ID must be provided" });
+  if (projectId) {
+    TaskModel.find({ projectId })
+      .populate({
+        path: "assignedTo",
+        select: "-password",
+      })
+      .exec()
+      .then((tasks) => res.json({ tasks, error: null }))
+      .catch((error) => res.json({ tasks: null, error: error.message }));
+  } else {
+    console.log(user._id);
+    TaskModel.find({ assignedTo: user._id })
+      .populate({
+        path: "assignedTo",
+        select: "-password",
+      })
+      .exec()
+      .then((tasks) => res.json({ tasks, error: null }))
+      .catch((error) => res.json({ tasks: null, error: error.message }));
   }
-  TaskModel.find({ projectId })
-    .populate({
-      path: "assignedTo",
-      select: "-password",
-    })
-    .exec()
-    .then((tasks) => res.json({ tasks, error: null }))
-    .catch((error) => res.json({ tasks: null, error: error.message }));
 };
 
 exports.getTaskDetails = async (req, res) => {
@@ -73,8 +83,8 @@ exports.updateTask = async (req, res) => {
 exports.deleteTask = async (req, res) => {
   const { id } = req.params;
   TaskModel.findByIdAndDelete(id)
-    .then(() => res.json({ error }))
-    .catch((error) => res.json({ error }));
+    .then(() => res.json({ error: null }))
+    .catch((error) => res.json({ error: error.message }));
 };
 
 exports.commentOnTask = async (req, res) => {
