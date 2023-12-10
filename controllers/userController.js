@@ -7,34 +7,108 @@ const JWT_SECRET = "jwt-secret";
 
 exports.createUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-    const user = await UserModel.findOne({ email });
+    const { username, password } = req.body;
+
+    const user = await UserModel.findOne({ username });
     if (user) {
-      return res.status(409).json({ message: "User already existed" });
+      return res.json({ error: "Username has been used" });
     }
+
     const hashedPassword = await bcrypt.hash(password, ROUNDS);
-    const newUser = new UserModel({ name, email, password: hashedPassword });
+    const newUser = new UserModel({
+      username,
+      password: hashedPassword,
+    });
     await newUser.save();
-    res.status(201).json({ message: "User created successfully" });
+
+    const { password: _, ...rest } = newUser;
+
+    const token = jwt.sign(
+      {
+        user: {
+          _id: newUser._id,
+          username: newUser.username,
+          avatar_url: newUser.avatar_url,
+        },
+      },
+      JWT_SECRET
+    );
+    res.cookie("jwt", token, { httpOnly: true });
+    res.json({ error: null });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res.json({ error });
   }
 };
 
-exports.signInUser = async (req, res) => {
+exports.signIn = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
-    const user = await UserModel.findOne({ email });
-    if (!user || !bcrypt.compareSync(password, user.password)) {
-      return res.status(401).json({ message: "Invalid credentials" });
+    const user = await UserModel.findOne({ username });
+    if (!user) {
+      return res.json({ error: "User not existed" });
     }
-    const token = jwt.sign({ userId: user._id }, JWT_SECRET);
+    if (!bcrypt.compareSync(password, user.password)) {
+      return res.json({ error: "Invalid password" });
+    }
 
-    res.status(200).json({ message: "Valid credentials", token });
+    const token = jwt.sign(
+      {
+        user: {
+          _id: user._id,
+          username: user.username,
+          avatar_url: user.avatar_url,
+        },
+      },
+      JWT_SECRET
+    );
+    res.cookie("jwt", token, { httpOnly: true });
+    res.json({ error: null });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res.json({ error });
   }
+};
+
+exports.signOut = async (req, res) => {
+  try {
+    res.clearCookie("jwt");
+    res.json({ error: null });
+  } catch (error) {
+    res.json({ error });
+  }
+};
+
+exports.authenticateToken = (req, res, next) => {
+  const token = req.cookies["jwt"];
+  if (!token) return res.json({ error: "Unauthorized" });
+
+  jwt.verify(token, JWT_SECRET, (error, data) => {
+    if (error) return res.json({ error });
+    req.user = data.user;
+    next();
+  });
+};
+
+exports.getUsers = async (req, res) => {
+  const { username } = req.query;
+  UserModel.find({ username }, "-password")
+    .then((users) => res.json({ users, error: null }))
+    .catch((error) => res.json({ users: null, error }));
+};
+
+exports.getAuthenticated = async (req, res) => {
+  const token = req.cookies["jwt"];
+  if (!token) return res.json({ authenticated: false });
+
+  jwt.verify(token, JWT_SECRET, (error, user) => {
+    if (error) return res.json({ authenticated: false });
+    res.json({ authenticated: true });
+  });
+};
+
+exports.updateUser = async (req, res) => {
+  const { id } = req.params;
+  console.log(req.file);
 };

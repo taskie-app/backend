@@ -1,80 +1,94 @@
 const TaskModel = require("../models/taskModel");
 
 exports.createTask = async (req, res) => {
-  const { projectId, title, description, assignedTo, status, dueDate } =
-    req.body;
+  const {
+    projectId,
+    name,
+    description = "",
+    assignedTo = null,
+    status,
+    dueDate = null,
+    comments = [],
+  } = req.body;
 
-  try {
-    const newTask = new TaskModel({
-      projectId,
-      title,
-      description,
-      assignedTo,
-      status,
-      dueDate,
-    });
-    await newTask.save();
+  const newTask = new TaskModel({
+    projectId,
+    name,
+    description,
+    assignedTo,
+    status,
+    dueDate,
+    comments,
+  });
 
-    res
-      .status(201)
-      .json({ message: "Task created successfully", data: { task: newTask } });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal server error" });
-  }
+  newTask
+    .save()
+    .then((task) => res.json({ task, error: null }))
+    .catch((error) => res.json({ task: null, error }));
 };
 
 exports.getTasks = async (req, res) => {
-  try {
-    const tasks = await TaskModel.find();
-    res.json({ data: { tasks } });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+  const { projectId } = req.query;
+  if (!projectId) {
+    return res.json({ error: "Project ID must be provided" });
   }
+  TaskModel.find({ projectId })
+    .populate({
+      path: "assignedTo",
+      select: "-password",
+    })
+    .exec()
+    .then((tasks) => res.json({ tasks, error: null }))
+    .catch((error) => res.json({ tasks: null, error: error.message }));
 };
 
-exports.getTaksDetails = async (req, res) => {
+exports.getTaskDetails = async (req, res) => {
   const { id } = req.params;
-  try {
-    const task = await TaskModel.findById(id);
-    res.json({ data: { task } });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal server error" });
-  }
+  TaskModel.findById(id)
+    .populate({
+      path: "assignedTo",
+      select: "-password",
+    })
+    .exec()
+    .then((task) => res.json({ task, error: null }))
+    .catch((error) => res.json({ task: null, error }));
 };
 
 exports.updateTask = async (req, res) => {
   const { id } = req.params;
-  const { projectId, title, description, assignedTo, status, dueDate } =
+  const { projectId, name, description, assignedTo, status, dueDate } =
     req.body;
-  try {
-    const updatedTask = await TaskModel.findByIdAndUpdate(id, {
-      projectId,
-      title,
-      description,
-      assignedTo,
-      status,
-      dueDate,
-    });
-    res.json({
-      message: "Task updated successfully",
-      data: { task: updatedTask },
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal server error" });
-  }
+  TaskModel.findByIdAndUpdate(id, {
+    projectId,
+    name,
+    description,
+    assignedTo: assignedTo?._id,
+    status,
+    dueDate,
+  })
+    .then((task) => res.json({ task, error: null }))
+    .catch((error) => res.json({ task: null, error }));
 };
 
 exports.deleteTask = async (req, res) => {
   const { id } = req.params;
-  try {
-    await TaskModel.findByIdAndDelete(id);
-    res.json({ message: "Task deleted successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal server error" });
-  }
+  TaskModel.findByIdAndDelete(id)
+    .then(() => res.json({ error }))
+    .catch((error) => res.json({ error }));
+};
+
+exports.commentOnTask = async (req, res) => {
+  const { id } = req.params;
+  const { author, content } = req.body;
+
+  TaskModel.findByIdAndUpdate(id, {
+    $push: {
+      comments: {
+        author,
+        content,
+      },
+    },
+  })
+    .then(() => res.json({ error: null }))
+    .catch((error) => res.json({ error }));
 };

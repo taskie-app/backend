@@ -1,15 +1,35 @@
 const mongoose = require("mongoose");
 
 const taskSchema = new mongoose.Schema({
-  projectId: mongoose.Schema.Types.ObjectId,
-  title: String,
+  projectId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Project",
+    require: true,
+  },
+  name: {
+    type: String,
+    require: true,
+  },
   description: String,
   assignedTo: {
-    userId: mongoose.Schema.Types.ObjectId,
-    username: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
   },
-  status: String,
-  dueDate: Date,
+  status: {
+    type: String,
+    enum: ["TODO", "IN_PROGRESS", "DONE"],
+    default: "TODO",
+  },
+  dueDate: String,
+  comments: [
+    {
+      author: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+      content: String,
+    },
+  ],
 });
 
 const TaskModel = mongoose.model("Task", taskSchema);
