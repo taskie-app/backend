@@ -10,7 +10,10 @@ const taskSchema = new mongoose.Schema({
     type: String,
     require: true,
   },
-  description: String,
+  description: {
+    text: String,
+    html: String,
+  },
   assignedTo: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
@@ -21,15 +24,11 @@ const taskSchema = new mongoose.Schema({
     default: "TODO",
   },
   dueDate: String,
-  comments: [
-    {
-      author: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-      content: String,
-    },
-  ],
+  priority: {
+    type: String,
+    enum: ["LOW", "MEDIUM", "HIGH"],
+    default: "LOW",
+  },
 });
 
 const TaskModel = mongoose.model("Task", taskSchema);

@@ -1,18 +1,24 @@
 const CommentModel = require("../models/commentModel");
 
 exports.createComment = async (req, res) => {
+  const { user } = req;
   const { taskId } = req.params;
-  const { author, content } = body;
+  const { content } = req.body;
   const newComment = new CommentModel({
     task: taskId,
-    author,
+    author: user._id,
     content,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   });
 
-  newComment
-    .save()
+  await newComment.save();
+
+  CommentModel.findById(newComment._id)
+    .populate({
+      path: "author",
+      select: "-password",
+    })
     .then((comment) => res.json({ comment, error: null }))
     .catch((error) => res.json({ comment: null, error: error.message }));
 };

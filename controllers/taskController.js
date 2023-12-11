@@ -4,21 +4,21 @@ exports.createTask = async (req, res) => {
   const {
     projectId,
     name,
-    description = "",
-    assignedTo = null,
+    description,
+    assignedTo,
     status,
-    dueDate = null,
-    comments = [],
+    dueDate,
+    priority,
   } = req.body;
 
   const newTask = new TaskModel({
     projectId,
     name,
     description,
-    assignedTo,
+    assignedTo: assignedTo?._id,
     status,
     dueDate,
-    comments,
+    priority,
   });
 
   newTask
@@ -66,8 +66,15 @@ exports.getTaskDetails = async (req, res) => {
 
 exports.updateTask = async (req, res) => {
   const { id } = req.params;
-  const { projectId, name, description, assignedTo, status, dueDate } =
-    req.body;
+  const {
+    projectId,
+    name,
+    description,
+    assignedTo,
+    status,
+    dueDate,
+    priority,
+  } = req.body;
   TaskModel.findByIdAndUpdate(id, {
     projectId,
     name,
@@ -75,6 +82,7 @@ exports.updateTask = async (req, res) => {
     assignedTo: assignedTo?._id,
     status,
     dueDate,
+    priority,
   })
     .then((task) => res.json({ task, error: null }))
     .catch((error) => res.json({ task: null, error }));
