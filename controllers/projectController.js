@@ -101,12 +101,23 @@ exports.updateProject = async (req, res) => {
   }
 
   const { name, description, manager, members } = req.body;
-  ProjectModel.findByIdAndUpdate(id, {
+  await ProjectModel.findByIdAndUpdate(id, {
     name,
     description,
     manager: manager?._id,
     members: members.map((m) => m._id),
-  })
+  });
+
+  ProjectModel.findById(id)
+    .populate({
+      path: "manager",
+      select: "-password",
+    })
+    .populate({
+      path: "members",
+      select: "-password",
+    })
+    .exec()
     .then((updatedProject) =>
       res.json({ project: updatedProject, error: null })
     )
