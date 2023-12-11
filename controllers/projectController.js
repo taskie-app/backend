@@ -44,10 +44,24 @@ exports.getProjects = async (req, res) => {
 };
 
 exports.getProjectDetails = async (req, res) => {
-  const { user } = req.body;
+  const { user } = req;
   const { id } = req.params;
 
-  ProjectModel.findById(id)
+  ProjectModel.find({
+    $and: [
+      { _id: id },
+      {
+        $or: [
+          { manager: user._id },
+          {
+            members: {
+              $elemMatch: { $eq: user._id },
+            },
+          },
+        ],
+      },
+    ],
+  })
     .populate({
       path: "manager",
       select: "-password",
@@ -57,19 +71,15 @@ exports.getProjectDetails = async (req, res) => {
       select: "-password",
     })
     .exec()
-    .then((project) => {
-      const isManager = project.manager._id == user._id;
-      const isMember = project.members
-        .map((member) => member._id)
-        .includes(user._id);
-      if (!isManager && !isMember)
+    .then((projects) => {
+      if (!projects.length)
         return res.json({
           project: null,
           error: "Cannot view this project. User must be manager or member.",
         });
-      res.json({ project, error: null });
+      res.json({ project: projects[0], error: null });
     })
-    .catch((error) => res.json({ error }));
+    .catch((error) => res.json({ error: error.message }));
 };
 
 exports.updateProject = async (req, res) => {
@@ -108,7 +118,7 @@ exports.deleteProject = async (req, res) => {
   const { id } = req.params;
 
   const project = await ProjectModel.findById(id);
-  const isManager = project.manager == user.id;
+  const isManager = project.manager._id == user._id;
   if (!isManager)
     return res.json({
       error: "Cannot delete this project. User must be manager.",
