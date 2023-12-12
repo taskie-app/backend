@@ -8,7 +8,6 @@ const JWT_SECRET = "jwt-secret";
 exports.createUser = async (req, res) => {
   try {
     const { name, username, password } = req.body;
-
     const user = await UserModel.findOne({ username });
     if (user) {
       return res.json({ error: "Username has been used" });
@@ -21,6 +20,7 @@ exports.createUser = async (req, res) => {
       password: hashedPassword,
     });
     await newUser.save();
+  
 
     const userData = extractUserData(newUser);
     setJwtCookie(res, userData);
