@@ -21,8 +21,14 @@ exports.createTask = async (req, res) => {
     priority,
   });
 
-  newTask
-    .save()
+  await newTask.save();
+
+  TaskModel.findById(newTask._id)
+    .populate({
+      path: "assignedTo",
+      select: "-password",
+    })
+    .exec()
     .then((task) => res.json({ task, error: null }))
     .catch((error) => res.json({ task: null, error }));
 };
