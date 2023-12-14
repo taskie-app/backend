@@ -39,15 +39,29 @@ exports.getComments = async (req, res) => {
 };
 
 exports.updateComment = async (req, res) => {
+  const { user } = req;
   const { commentId } = req.params;
   const { content } = req.body;
+  const comment = await CommentModel.findById(commentId);
+  if (user._id != comment.author._id)
+    return res.json({
+      comment: null,
+      error: "Your must be the author to update this comment",
+    });
   CommentModel.findByIdAndUpdate(commentId, { content, updatedAt: Date.now() })
     .then((comment) => res.json({ comment, error: null }))
     .catch((error) => res.json({ comment: null, error: error.message }));
 };
 
 exports.deleteComment = async (req, res) => {
+  const { user } = req;
   const { commentId } = req.params;
+  const comment = await CommentModel.findById(commentId);
+  if (user._id != comment.author._id)
+    return res.json({
+      comment: null,
+      error: "Your must be the author to update this comment",
+    });
   CommentModel.findByIdAndDelete(commentId)
     .then(() => res.json({ error: null }))
     .catch((error) => res.json({ error: error.message }));
