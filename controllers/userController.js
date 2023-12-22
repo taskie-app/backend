@@ -117,7 +117,7 @@ exports.updateUser = async (req, res) => {
 
 function setJwtCookie(res, userData) {
   const token = jwt.sign({ user: userData }, JWT_SECRET);
-  res.cookie("jwt", token, { httpOnly: true, sameSite: "None", secure: true });
+  res.cookie("jwt", token, { httpOnly: true, sameSite: true });
 }
 
 function clearJwtCookie() {}
