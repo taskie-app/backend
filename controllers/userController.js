@@ -20,7 +20,6 @@ exports.createUser = async (req, res) => {
       password: hashedPassword,
     });
     await newUser.save();
-  
 
     const userData = extractUserData(newUser);
     setJwtCookie(res, userData);
@@ -118,7 +117,7 @@ exports.updateUser = async (req, res) => {
 
 function setJwtCookie(res, userData) {
   const token = jwt.sign({ user: userData }, JWT_SECRET);
-  res.cookie("jwt", token, { httpOnly: true });
+  res.cookie("jwt", token, { httpOnly: true, sameSite: "None", secure: true });
 }
 
 function clearJwtCookie() {}
