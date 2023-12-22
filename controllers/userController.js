@@ -47,7 +47,7 @@ exports.signIn = async (req, res) => {
     res.json({ user: userData, error: null });
   } catch (error) {
     console.error(error);
-    res.json({ error });
+    res.json({ error: error.message });
   }
 };
 
@@ -117,7 +117,7 @@ exports.updateUser = async (req, res) => {
 
 function setJwtCookie(res, userData) {
   const token = jwt.sign({ user: userData }, JWT_SECRET);
-  res.cookie("jwt", token, { httpOnly: true, sameSite: true });
+  res.cookie("jwt", token, { sameSite: "none", secure: true });
 }
 
 function clearJwtCookie() {}
