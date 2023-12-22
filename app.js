@@ -31,7 +31,7 @@ app.use(
   cors({
     credentials: true,
     // TODO: change origin on deployment
-    origin: "http://localhost:5173",
+    origin: "https://taskie-app-frontend.vercel.app",
   })
 );
 app.use(logger("dev"));
